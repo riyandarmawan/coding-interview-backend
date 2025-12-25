@@ -3,11 +3,14 @@ import { ITodoRepository } from "../core/ITodoRepository";
 
 export class InMemoryTodoRepository implements ITodoRepository {
   private todos: Todo[] = [];
+  private idCounter = 0;
 
   async create(
     todoData: Omit<Todo, "id" | "createdAt" | "updatedAt">
   ): Promise<Todo> {
-    const id = `todo-${Math.floor(Math.random() * 1000000)}`;
+    this.idCounter++;
+    
+    const id = `todo-${this.idCounter}`;
     const now = new Date();
 
     const todo: Todo = {
@@ -18,7 +21,7 @@ export class InMemoryTodoRepository implements ITodoRepository {
     };
 
     this.todos.push(todo);
-    return todo;
+    return {...todo};
   }
 
   async update(
@@ -28,17 +31,7 @@ export class InMemoryTodoRepository implements ITodoRepository {
     const index = this.todos.findIndex((t) => t.id === id);
 
     if (index === -1) {
-      const newTodo: Todo = {
-        id,
-        userId: (updates as any).userId || "unknown",
-        title: (updates as any).title || "Untitled",
-        status: updates.status || "PENDING",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...updates,
-      };
-      this.todos.push(newTodo);
-      return newTodo;
+      return null;
     }
 
     this.todos[index] = {
@@ -47,19 +40,19 @@ export class InMemoryTodoRepository implements ITodoRepository {
       updatedAt: new Date(),
     };
 
-    return this.todos[index];
+    return {...this.todos[index]};
   }
 
   async findById(id: string): Promise<Todo | null> {
-    const todo = this.todos.find((t) => t.id == id);
-    return todo || null;
+    const todo = this.todos.find((t) => t.id === id);
+    return todo ? {...todo} : null;
   }
 
   async findByUserId(userId: string): Promise<Todo[]> {
-    return this.todos.filter((t) => t.userId === userId);
+    return this.todos.filter((t) => t.userId === userId).map(t => ({ ...t }));
   }
 
   async findDueReminders(currentTime: Date): Promise<Todo[]> {
-    return this.todos.filter((t) => t.remindAt && t.remindAt <= currentTime);
+    return this.todos.filter((t) => t.remindAt && t.remindAt <= currentTime && t.status === "PENDING").map(t => ({...t}));
   }
 }

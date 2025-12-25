@@ -9,9 +9,21 @@ export class TodoService {
   ) {}
 
   async createTodo(data: any): Promise<Todo> {
+    const trimmedTitle = data.title.trim();
+
+    if (!trimmedTitle) {
+      throw new Error("Title is required");
+    }
+
+    const existingUser = await this.userRepo.findById(data.userId);
+
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
+
     const todo = await this.todoRepo.create({
       userId: data.userId,
-      title: data.title,
+      title: trimmedTitle,
       description: data.description,
       status: "PENDING",
       remindAt: data.remindAt ? new Date(data.remindAt) : undefined,
@@ -24,10 +36,10 @@ export class TodoService {
     const todo = await this.todoRepo.findById(todoId);
 
     if (!todo) {
-      throw new Error("Not found");
+      throw new Error("Todo not found");
     }
 
-    if (todo.status == "DONE") {
+    if (todo.status === "DONE") {
       return todo;
     }
 
@@ -37,7 +49,7 @@ export class TodoService {
     });
 
     if (!updated) {
-      throw new Error("Not found");
+      throw new Error("Todo not found");
     }
 
     return updated;

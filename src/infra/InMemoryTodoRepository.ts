@@ -4,6 +4,17 @@ import { ITodoRepository } from "../core/ITodoRepository";
 export class InMemoryTodoRepository implements ITodoRepository {
   private todos: Todo[] = [];
   private idCounter = 0;
+  private lastTimestamp = new Date(0);
+
+  private getNextTimestamp(): Date {
+    const now = new Date();
+    if (now <= this.lastTimestamp) {
+      this.lastTimestamp = new Date(this.lastTimestamp.getTime() + 1);
+    } else {
+      this.lastTimestamp = now;
+    }
+    return this.lastTimestamp;
+  }
 
   async create(
     todoData: Omit<Todo, "id" | "createdAt" | "updatedAt">
@@ -11,7 +22,7 @@ export class InMemoryTodoRepository implements ITodoRepository {
     this.idCounter++;
     
     const id = `todo-${this.idCounter}`;
-    const now = new Date();
+    const now = this.getNextTimestamp();
 
     const todo: Todo = {
       ...todoData,
@@ -37,7 +48,7 @@ export class InMemoryTodoRepository implements ITodoRepository {
     this.todos[index] = {
       ...this.todos[index],
       ...updates,
-      updatedAt: new Date(),
+      updatedAt: this.getNextTimestamp(),
     };
 
     return {...this.todos[index]};

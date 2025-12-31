@@ -54,6 +54,14 @@ export class InMemoryTodoRepository implements ITodoRepository {
     return {...this.todos[index]};
   }
 
+  async delete(id: string): Promise<void> {
+    const todo = await this.findById(id);
+
+    if (!todo) return;
+
+    this.todos = this.todos.filter((t) => t.id !== id);
+  }
+
   async findById(id: string): Promise<Todo | null> {
     const todo = this.todos.find((t) => t.id === id);
     return todo ? {...todo} : null;
